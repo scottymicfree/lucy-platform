@@ -1,0 +1,19 @@
+{
+  "name": "lucy-platform-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "main": "main.cjs",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node dev.mjs",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^30.0.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.13.3"
+  }
+}
