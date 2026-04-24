@@ -1,0 +1,1321 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+type IconProps = React.SVGProps<SVGSVGElement>;
+
+const IconBase = ({ className = '', children, ...props }: IconProps & { children: React.ReactNode }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+    {...props}
+  >
+    {children}
+  </svg>
+);
+
+const Activity = (props: IconProps) => <IconBase {...props}><path d="M22 12h-4l-3 8-6-16-3 8H2" /></IconBase>;
+const Brain = (props: IconProps) => <IconBase {...props}><path d="M9 3a3 3 0 0 0-3 3v1a3 3 0 0 0-2 5 3 3 0 0 0 2 5v1a3 3 0 0 0 5 2" /><path d="M15 3a3 3 0 0 1 3 3v1a3 3 0 0 1 2 5 3 3 0 0 1-2 5v1a3 3 0 0 1-5 2" /><path d="M12 5v14" /></IconBase>;
+const CloudRain = (props: IconProps) => <IconBase {...props}><path d="M20 16.2A4.5 4.5 0 0 0 17 8h-1.3A6 6 0 1 0 5 13.5" /><path d="M8 19v2" /><path d="M12 19v2" /><path d="M16 19v2" /></IconBase>;
+const Cpu = (props: IconProps) => <IconBase {...props}><rect x="6" y="6" width="12" height="12" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3" /><path d="M15 1v3" /><path d="M9 20v3" /><path d="M15 20v3" /><path d="M20 9h3" /><path d="M20 15h3" /><path d="M1 9h3" /><path d="M1 15h3" /></IconBase>;
+const Database = (props: IconProps) => <IconBase {...props}><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5" /><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></IconBase>;
+const GlobeIcon = (props: IconProps) => <IconBase {...props}><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15 15 0 0 1 0 20" /><path d="M12 2a15 15 0 0 0 0 20" /></IconBase>;
+const Layers = (props: IconProps) => <IconBase {...props}><path d="M12 2 2 7l10 5 10-5-10-5Z" /><path d="m2 12 10 5 10-5" /><path d="m2 17 10 5 10-5" /></IconBase>;
+const Maximize2 = (props: IconProps) => <IconBase {...props}><path d="M15 3h6v6" /><path d="m21 3-7 7" /><path d="M9 21H3v-6" /><path d="m3 21 7-7" /></IconBase>;
+const Minimize2 = (props: IconProps) => <IconBase {...props}><path d="M4 14h6v6" /><path d="m10 14-7 7" /><path d="M20 10h-6V4" /><path d="m14 10 7-7" /></IconBase>;
+const Plane = (props: IconProps) => <IconBase {...props}><path d="M17.8 19.2 16 11l5-5c1.5-1.5.5-3.5-1.5-2l-5 5-8.2-1.8L5 8.5l6 3-4 4-3-.5-1 1 4 2 2 4 1-1-.5-3 4-4 3 6 1.3-1.3Z" /></IconBase>;
+const Play = (props: IconProps) => <IconBase {...props}><path d="M5 3v18l15-9L5 3Z" /></IconBase>;
+const RadioTower = (props: IconProps) => <IconBase {...props}><path d="M4.9 16.1a10 10 0 0 1 0-8.2" /><path d="M2 20a15 15 0 0 1 0-16" /><path d="M19.1 16.1a10 10 0 0 0 0-8.2" /><path d="M22 20a15 15 0 0 0 0-16" /><path d="M12 12h.01" /><path d="M10 20h4" /><path d="m12 12-2 8" /><path d="m12 12 2 8" /></IconBase>;
+const Satellite = (props: IconProps) => <IconBase {...props}><path d="M13 7 9 3 5 7l4 4 4-4Z" /><path d="m17 11 4 4-4 4-4-4 4-4Z" /><path d="m9 11 4 4" /><path d="M16 8a6 6 0 0 1 0 8" /><path d="M8 16a6 6 0 0 1 0-8" /></IconBase>;
+const Sun = (props: IconProps) => <IconBase {...props}><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></IconBase>;
+const Zap = (props: IconProps) => <IconBase {...props}><path d="M13 2 3 14h8l-1 8 11-14h-8l1-6Z" /></IconBase>;
+import Globe from 'react-globe.gl';
+import * as THREE from 'three';
+import { globalEventBus } from '../core/EventBus';
+import {
+  SemanticEvent,
+  LucySemanticDictionary,
+  PredictionPacket,
+  quakeScore,
+  stormForecast,
+  flightCongestion,
+  updateHeat,
+  getActiveHotspots,
+  LucyInterpret,
+  speakLucy,
+  detectAnomaly
+} from '../core/LucyIntelligence';
+
+type ReasoningMode = 'low_power' | 'balanced' | 'high_compute' | 'arc_pattern';
+
+type LayerState = {
+  flights: boolean;
+  seismic: boolean;
+  labels: boolean;
+  predictions: boolean;
+  weather: boolean;
+  clouds: boolean;
+};
+
+type FlightArc = {
+  id: string;
+  source: 'OPENSKY_LIVE' | 'MOCK_ADSB';
+  startLat: number;
+  startLng: number;
+  endLat: number;
+  endLng: number;
+  altitude: number;
+  heading: number;
+  velocity: number;
+  verticalRate?: number;
+  country?: string;
+  strokeThickness: number;
+  color: string;
+};
+
+type WeatherFrame = {
+  host: string;
+  path: string;
+  time: number;
+  generated?: number;
+  texture?: THREE.CanvasTexture;
+  status: 'idle' | 'loading' | 'live' | 'fallback' | 'error';
+  message: string;
+};
+
+type Pulse = {
+  id: string;
+  lat: number;
+  lng: number;
+  maxRadius: number;
+  propagationSpeed: number;
+  color: string;
+};
+
+type SourceVisual = {
+  label: string;
+  glyph: string;
+  dot: string;
+  ring: string;
+  badge: string;
+  agent: string;
+};
+
+const USGS_URL = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson';
+const NOAA_RTSW_WIND_URL = 'https://services.swpc.noaa.gov/json/rtsw/rtsw_wind_1m.json';
+const NOAAA_LEGACY_RTSW_URL = 'https://services.swpc.noaa.gov/json/rtsw.json';
+const RAINVIEWER_MAPS_URL = 'https://api.rainviewer.com/public/weather-maps.json';
+const OPENSKY_STATES_URL = 'https://opensky-network.org/api/states/all';
+
+const EARTH_TEXTURE = 'https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg';
+const EARTH_BUMP = 'https://unpkg.com/three-globe/example/img/earth-topology.png';
+const CLOUD_TEXTURE = 'https://unpkg.com/three-globe/example/img/fair_clouds_4k.png';
+const STAR_TEXTURE = 'https://unpkg.com/three-globe/example/img/night-sky.png';
+
+const MAX_FEED_ITEMS = 80;
+const MAX_FLIGHTS = 260;
+const MAX_PULSES = 28;
+const RAINVIEWER_TILE_ZOOM = 2;
+const RAINVIEWER_TILE_SIZE = 512;
+
+const SOURCE_VISUALS: Record<string, SourceVisual> = {
+  USGS_EARTHQUAKES: {
+    label: 'USGS Seismic',
+    glyph: '◈',
+    dot: '#fb923c',
+    ring: '#f97316',
+    badge: 'bg-orange-500/10 text-orange-300 border-orange-500/30',
+    agent: 'Emma'
+  },
+  NOAA_SPACE: {
+    label: 'NOAA Solar Wind',
+    glyph: '☼',
+    dot: '#22d3ee',
+    ring: '#06b6d4',
+    badge: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+    agent: 'Lucy'
+  },
+  HYPER_SWARM_MESH: {
+    label: 'Hyper Swarm',
+    glyph: '✦',
+    dot: '#a78bfa',
+    ring: '#8b5cf6',
+    badge: 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+    agent: 'Swarm'
+  },
+  LUCY_PREDICTION: {
+    label: 'Prediction Event',
+    glyph: '◆',
+    dot: '#f472b6',
+    ring: '#ec4899',
+    badge: 'bg-pink-500/10 text-pink-300 border-pink-500/30',
+    agent: 'Lucy'
+  },
+  WEATHER_RADAR: {
+    label: 'Weather Radar',
+    glyph: '☔',
+    dot: '#38bdf8',
+    ring: '#0ea5e9',
+    badge: 'bg-sky-500/10 text-sky-300 border-sky-500/30',
+    agent: 'EarthFeed'
+  }
+};
+
+const nowIso = () => new Date().toISOString();
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+const sourceVisual = (source: string): SourceVisual => {
+  const semantic = LucySemanticDictionary[source];
+  return SOURCE_VISUALS[source] || {
+    label: semantic?.label || source,
+    glyph: semantic?.glyph || '⚲',
+    dot: '#94a3b8',
+    ring: '#64748b',
+    badge: 'bg-slate-700/40 text-slate-300 border-slate-600/40',
+    agent: 'Raw'
+  };
+};
+
+const signalColor = (confidence: number) => {
+  if (confidence >= 0.85) return '#10b981';
+  if (confidence >= 0.6) return '#06b6d4';
+  if (confidence >= 0.35) return '#f59e0b';
+  return '#94a3b8';
+};
+
+const trendColor = (trend?: string) => {
+  if (trend === 'RISING') return 'border-red-400/40 bg-red-500/10 text-red-300';
+  if (trend === 'FALLING') return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300';
+  return 'border-cyan-400/40 bg-cyan-500/10 text-cyan-300';
+};
+
+const predictionPointFor = (prediction: PredictionPacket, idx: number): SemanticEvent => {
+  const fallbackLocations = [
+    { lat: 37.2, lng: -122.1 },
+    { lat: 28.5, lng: -82.4 },
+    { lat: 51.5, lng: -0.12 },
+    { lat: 35.7, lng: 139.7 }
+  ];
+  const fallback = fallbackLocations[idx % fallbackLocations.length];
+  const loc = prediction.location || fallback;
+  const color = prediction.trend === 'RISING' ? '#ef4444' : prediction.trend === 'FALLING' ? '#10b981' : '#ec4899';
+
+  return {
+    id: `prediction_${prediction.domain}_${idx}_${Date.now()}`,
+    source: 'LUCY_PREDICTION',
+    type: `${prediction.domain.replaceAll('_', ' ')} Forecast`,
+    value: `${Math.round(prediction.confidence * 100)}% confidence`,
+    location: prediction.location ? 'Prediction Vector' : 'Synthetic Anchor',
+    timestamp: new Date(),
+    urlRef: 'LucyPredictionEngine',
+    lat: loc.lat,
+    lng: loc.lng,
+    size: clamp(prediction.confidence * 4, 0.8, 4),
+    color,
+    agentSource: 'Lucy',
+    intent: prediction.trend || 'STABLE'
+  } as SemanticEvent;
+};
+
+const normalizeSolarWindSpeed = (payload: any): number | null => {
+  const list = Array.isArray(payload) ? payload : payload?.data || payload?.wind || [];
+  if (!Array.isArray(list) || list.length === 0) return null;
+
+  const latest = [...list].reverse().find((row: any) => {
+    const speed = row?.speed ?? row?.wind_speed ?? row?.bulk_speed ?? row?.[1] ?? row?.[2];
+    return speed !== null && speed !== undefined && Number.isFinite(Number(speed));
+  });
+
+  if (!latest) return null;
+  const speed = latest.speed ?? latest.wind_speed ?? latest.bulk_speed ?? latest[1] ?? latest[2];
+  return Number(speed);
+};
+
+const openskyUrl = () => {
+  // Four smaller boxes are better than one giant global hit, but this one broad box keeps the file drop-in simple.
+  // Move this behind your local Lucy backend proxy once you add OpenSky OAuth credentials.
+  const params = new URLSearchParams({
+    lamin: '18.0',
+    lomin: '-170.0',
+    lamax: '72.0',
+    lomax: '60.0',
+    extended: '1'
+  });
+  return `${OPENSKY_STATES_URL}?${params.toString()}`;
+};
+
+const flightColor = (altitude: number, source: FlightArc['source']) => {
+  if (source === 'MOCK_ADSB') return 'rgba(148, 163, 184, 0.38)';
+  if (altitude >= 10000) return 'rgba(56, 189, 248, 0.86)';
+  if (altitude >= 5000) return 'rgba(34, 211, 238, 0.72)';
+  return 'rgba(125, 211, 252, 0.58)';
+};
+
+const parseOpenSkyFlights = (data: any): FlightArc[] => {
+  if (!Array.isArray(data?.states)) return [];
+
+  return data.states
+    .slice(0, MAX_FLIGHTS)
+    .map((s: any[]) => {
+      const lon = Number(s?.[5]);
+      const lat = Number(s?.[6]);
+      const heading = Number(s?.[10]);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(heading)) return null;
+
+      const altitude = Number(s?.[7] ?? s?.[13] ?? 0);
+      const velocity = Number(s?.[9] ?? 0);
+      const verticalRate = Number(s?.[11] ?? 0);
+      const callsign = typeof s?.[1] === 'string' && s[1].trim() ? s[1].trim() : String(s?.[0] || `FLT_${Math.random()}`);
+      const headingRad = heading * (Math.PI / 180);
+      const projectedDistance = clamp((velocity || 160) / 110, 0.7, 3.2);
+      const endLat = lat + Math.cos(headingRad) * projectedDistance;
+      const endLng = lon + Math.sin(headingRad) * projectedDistance;
+      const thickness = clamp((altitude / 11000) * 0.9, 0.22, 1.0);
+
+      return {
+        id: callsign,
+        source: 'OPENSKY_LIVE' as const,
+        startLat: lat,
+        startLng: lon,
+        endLat,
+        endLng,
+        altitude: Number.isFinite(altitude) ? altitude : 0,
+        heading,
+        velocity: Number.isFinite(velocity) ? velocity : 0,
+        verticalRate: Number.isFinite(verticalRate) ? verticalRate : 0,
+        country: s?.[2],
+        strokeThickness: thickness,
+        color: flightColor(altitude, 'OPENSKY_LIVE')
+      };
+    })
+    .filter(Boolean) as FlightArc[];
+};
+
+const buildMockFlights = (): FlightArc[] => {
+  const hubs = [
+    [40.64, -73.77, 'JFK'],
+    [33.94, -118.4, 'LAX'],
+    [41.97, -87.9, 'ORD'],
+    [51.47, -0.45, 'LHR'],
+    [50.03, 8.56, 'FRA'],
+    [35.77, 140.39, 'NRT']
+  ] as const;
+
+  return Array.from({ length: 120 }).map((_, i) => {
+    const hub = hubs[i % hubs.length];
+    const lat = hub[0] + (Math.random() - 0.5) * 24;
+    const lng = hub[1] + (Math.random() - 0.5) * 32;
+    const heading = Math.random() * 360;
+    const headingRad = heading * (Math.PI / 180);
+    const dist = 0.9 + Math.random() * 2.7;
+    const altitude = 2500 + Math.random() * 10000;
+    return {
+      id: `MOCK_${hub[2]}_${i}`,
+      source: 'MOCK_ADSB',
+      startLat: lat,
+      startLng: lng,
+      endLat: lat + Math.cos(headingRad) * dist,
+      endLng: lng + Math.sin(headingRad) * dist,
+      altitude,
+      heading,
+      velocity: 140 + Math.random() * 180,
+      verticalRate: -8 + Math.random() * 16,
+      country: 'Fallback',
+      strokeThickness: clamp((altitude / 11000) * 0.75, 0.18, 0.75),
+      color: flightColor(altitude, 'MOCK_ADSB')
+    } as FlightArc;
+  });
+};
+
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+
+const buildRainviewerTexture = async (frame: { host: string; path: string }) => {
+  const z = RAINVIEWER_TILE_ZOOM;
+  const tileSize = RAINVIEWER_TILE_SIZE;
+  const tiles = 2 ** z;
+
+  const mercatorCanvas = document.createElement('canvas');
+  mercatorCanvas.width = tiles * tileSize;
+  mercatorCanvas.height = tiles * tileSize;
+  const mercatorCtx = mercatorCanvas.getContext('2d', { willReadFrequently: true });
+  if (!mercatorCtx) throw new Error('Canvas unavailable');
+
+  const tileJobs: Promise<void>[] = [];
+  for (let x = 0; x < tiles; x += 1) {
+    for (let y = 0; y < tiles; y += 1) {
+      const tileUrl = `${frame.host}${frame.path}/${tileSize}/${z}/${x}/${y}/2/1_1.png`;
+      tileJobs.push(
+        loadImage(tileUrl)
+          .then((img) => mercatorCtx.drawImage(img, x * tileSize, y * tileSize, tileSize, tileSize))
+          .catch(() => undefined)
+      );
+    }
+  }
+
+  await Promise.all(tileJobs);
+
+  const source = mercatorCtx.getImageData(0, 0, mercatorCanvas.width, mercatorCanvas.height);
+  const outWidth = 2048;
+  const outHeight = 1024;
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = outWidth;
+  outCanvas.height = outHeight;
+  const outCtx = outCanvas.getContext('2d', { willReadFrequently: true });
+  if (!outCtx) throw new Error('Output canvas unavailable');
+
+  const output = outCtx.createImageData(outWidth, outHeight);
+  const n = 2 ** z;
+
+  for (let y = 0; y < outHeight; y += 1) {
+    const lat = 90 - (y / outHeight) * 180;
+    const latRad = (lat * Math.PI) / 180;
+    const mercY = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n * tileSize;
+    const srcY = clamp(Math.floor(mercY), 0, source.height - 1);
+
+    for (let x = 0; x < outWidth; x += 1) {
+      const lon = (x / outWidth) * 360 - 180;
+      const mercX = ((lon + 180) / 360) * n * tileSize;
+      const srcX = clamp(Math.floor(mercX), 0, source.width - 1);
+      const srcIndex = (srcY * source.width + srcX) * 4;
+      const dstIndex = (y * outWidth + x) * 4;
+
+      output.data[dstIndex] = source.data[srcIndex];
+      output.data[dstIndex + 1] = source.data[srcIndex + 1];
+      output.data[dstIndex + 2] = source.data[srcIndex + 2];
+      output.data[dstIndex + 3] = Math.floor(source.data[srcIndex + 3] * 0.72);
+    }
+  }
+
+  outCtx.putImageData(output, 0, 0);
+  const texture = new THREE.CanvasTexture(outCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+};
+
+const PredictionStrip: React.FC<{
+  predictions: PredictionPacket[];
+  onPromotePrediction: (event: SemanticEvent) => void;
+}> = ({ predictions, onPromotePrediction }) => {
+  if (predictions.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-[10px] text-slate-400 font-mono uppercase tracking-widest flex items-center gap-2">
+          <Activity className="w-3 h-3 text-lucy-primary" />
+          Prediction Engine Output
+        </h4>
+        <span className="text-[8px] px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/20 font-mono">
+          COLORED EVENTS
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        <AnimatePresence>
+          {predictions.map((p, idx) => (
+            <motion.button
+              type="button"
+              key={`${p.domain}-${idx}-${p.trend}`}
+              initial={{ opacity: 0, y: 10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.28, delay: idx * 0.06 }}
+              onClick={() => onPromotePrediction(predictionPointFor(p, idx))}
+              className={`text-left border rounded p-2.5 flex flex-col gap-1 relative overflow-hidden group transition-colors ${trendColor(p.trend)}`}
+            >
+              <div
+                className="absolute -top-5 -right-5 w-14 h-14 rounded-full blur-[22px] opacity-30 group-hover:opacity-60 transition-opacity"
+                style={{ backgroundColor: p.trend === 'RISING' ? '#ef4444' : p.trend === 'FALLING' ? '#10b981' : '#ec4899' }}
+              />
+
+              <div className="flex justify-between items-start z-10">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[9px] font-mono font-bold tracking-wide text-slate-200">{p.domain.replaceAll('_', ' ')}</span>
+                  {p.location && (
+                    <span className="text-[7px] text-slate-400 font-mono">
+                      {Math.abs(p.location.lat).toFixed(1)}°{p.location.lat >= 0 ? 'N' : 'S'}, {Math.abs(p.location.lng).toFixed(1)}°{p.location.lng >= 0 ? 'E' : 'W'}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[8px] font-black px-1 py-0.5 rounded bg-slate-950/50">{p.trend}</span>
+              </div>
+
+              <span className="text-[10px] text-slate-100 mt-1 leading-snug font-medium z-10">{p.forecast}</span>
+
+              <div className="flex items-center gap-2 mt-2 z-10">
+                <span className="text-[8px] text-slate-400 font-mono">CONF</span>
+                <div className="flex-1 bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                  <div
+                    className="h-full transition-all duration-1000"
+                    style={{ width: `${p.confidence * 100}%`, backgroundColor: signalColor(p.confidence), boxShadow: `0 0 8px ${signalColor(p.confidence)}` }}
+                  />
+                </div>
+                <span className="text-[8px] text-slate-100 font-mono font-bold">{(p.confidence * 100).toFixed(0)}%</span>
+              </div>
+            </motion.button>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export const TwinEarthDashboard: React.FC = () => {
+  const [feed, setFeed] = useState<SemanticEvent[]>([]);
+  const [predictions, setPredictions] = useState<PredictionPacket[]>([]);
+  const [scenarioInput, setScenarioInput] = useState('');
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simProgress, setSimProgress] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [flights, setFlights] = useState<FlightArc[]>([]);
+  const [flightMode, setFlightMode] = useState<'live' | 'fallback' | 'loading'>('loading');
+  const [hoverArc, setHoverArc] = useState<FlightArc | null>(null);
+  const [hotspots, setHotspots] = useState<any[]>([]);
+  const [weatherFrame, setWeatherFrame] = useState<WeatherFrame>({ status: 'idle', host: '', path: '', time: 0, message: 'Weather radar idle' });
+  const [reasoningMode, setReasoningMode] = useState<ReasoningMode>('balanced');
+  const [rotationSpeed, setRotationSpeed] = useState(0.85);
+  const [utcTime, setUtcTime] = useState(Date.now());
+  const [layers, setLayers] = useState<LayerState>({
+    flights: true,
+    seismic: true,
+    labels: false,
+    predictions: true,
+    weather: true,
+    clouds: true
+  });
+  const [pulses, setPulses] = useState<Pulse[]>([]);
+  const [mergeState, setMergeState] = useState({
+    hypothesisA: 62,
+    hypothesisB: 31,
+    noise: 7,
+    convergencePath: [
+      'A leads initial interpretation',
+      'Contradiction scan active',
+      'B checks sensor confidence',
+      'A+B stabilize under Emma gate'
+    ]
+  });
+
+  const globeRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const weatherMeshRef = useRef<THREE.Mesh | null>(null);
+  const cloudMeshRef = useRef<THREE.Mesh | null>(null);
+  const starMeshRef = useRef<THREE.Mesh | null>(null);
+  const sunLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const rimLightRef = useRef<THREE.DirectionalLight | null>(null);
+  const ambientLightRef = useRef<THREE.AmbientLight | null>(null);
+  const [globeSize, setGlobeSize] = useState({ width: 0, height: 0 });
+
+  const addFeedEvent = useCallback((event: SemanticEvent) => {
+    const visual = sourceVisual(event.source);
+    const normalized = {
+      ...event,
+      color: event.color || visual.ring,
+      size: event.size || 1.4,
+      timestamp: event.timestamp || new Date()
+    };
+    updateHeat(normalized);
+    setFeed((prev) => {
+      const withoutDuplicate = prev.filter((item) => item.id !== normalized.id);
+      return [normalized, ...withoutDuplicate].slice(0, MAX_FEED_ITEMS);
+    });
+  }, []);
+
+  const promotePrediction = useCallback((event: SemanticEvent) => {
+    addFeedEvent(event);
+    setPulses((old) => [
+      ...old,
+      {
+        id: `pulse_prediction_${Date.now()}`,
+        lat: event.lat || 0,
+        lng: event.lng || 0,
+        maxRadius: 7,
+        propagationSpeed: 2.8,
+        color: 'rgba(236, 72, 153, 0.56)'
+      }
+    ].slice(-MAX_PULSES));
+  }, [addFeedEvent]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      setGlobeSize({
+        width: containerRef.current.offsetWidth,
+        height: containerRef.current.offsetHeight
+      });
+    };
+
+    handleResize();
+    const timeouts = [50, 250, 550].map((delay) => window.setTimeout(handleResize, delay));
+    window.addEventListener('resize', handleResize);
+
+    const timeInterval = window.setInterval(() => setUtcTime(Date.now()), 60000);
+    const heatInterval = window.setInterval(() => setHotspots(getActiveHotspots()), 2000);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.clearInterval(timeInterval);
+      window.clearInterval(heatInterval);
+      timeouts.forEach(window.clearTimeout);
+    };
+  }, [isExpanded]);
+
+  useEffect(() => {
+    if (!globeRef.current) return;
+    const controls = globeRef.current.controls();
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = rotationSpeed;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+  }, [rotationSpeed, isExpanded]);
+
+  useEffect(() => {
+    if (!globeRef.current) return;
+    const scene: THREE.Scene = globeRef.current.scene();
+
+    if (!ambientLightRef.current) {
+      ambientLightRef.current = new THREE.AmbientLight(0x8bb7ff, 1.25);
+      scene.add(ambientLightRef.current);
+    }
+    if (!sunLightRef.current) {
+      sunLightRef.current = new THREE.DirectionalLight(0xffffff, 2.65);
+      scene.add(sunLightRef.current);
+    }
+    if (!rimLightRef.current) {
+      rimLightRef.current = new THREE.DirectionalLight(0x38bdf8, 0.9);
+      scene.add(rimLightRef.current);
+    }
+    if (!starMeshRef.current) {
+      const loader = new THREE.TextureLoader();
+      loader.load(STAR_TEXTURE, (texture) => {
+        const geometry = new THREE.SphereGeometry(420, 48, 48);
+        const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, transparent: true, opacity: 0.42 });
+        starMeshRef.current = new THREE.Mesh(geometry, material);
+        scene.add(starMeshRef.current);
+      });
+    }
+    if (!cloudMeshRef.current) {
+      const loader = new THREE.TextureLoader();
+      loader.load(CLOUD_TEXTURE, (texture) => {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const geometry = new THREE.SphereGeometry(101.2, 96, 96);
+        const material = new THREE.MeshPhongMaterial({
+          map: texture,
+          transparent: true,
+          opacity: layers.clouds ? 0.26 : 0,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+        cloudMeshRef.current = new THREE.Mesh(geometry, material);
+        scene.add(cloudMeshRef.current);
+      });
+    }
+
+    scene.fog = new THREE.Fog(0x020617, 360, 520);
+  }, [layers.clouds]);
+
+  useEffect(() => {
+    const date = new Date(utcTime);
+    const dayFraction = (date.getUTCHours() + date.getUTCMinutes() / 60) / 24;
+    const sunAngle = dayFraction * Math.PI * 2;
+
+    sunLightRef.current?.position.set(Math.cos(sunAngle) * 180, 35, Math.sin(sunAngle) * 180);
+    rimLightRef.current?.position.set(Math.cos(sunAngle + Math.PI) * 120, -20, Math.sin(sunAngle + Math.PI) * 120);
+
+    if (cloudMeshRef.current) {
+      cloudMeshRef.current.rotation.y += 0.0025;
+      const material = cloudMeshRef.current.material as THREE.MeshPhongMaterial;
+      material.opacity = layers.clouds ? 0.26 : 0;
+      material.needsUpdate = true;
+    }
+  }, [utcTime, layers.clouds]);
+
+  useEffect(() => {
+    if (!globeRef.current || !weatherFrame.texture) return;
+    const scene: THREE.Scene = globeRef.current.scene();
+
+    if (weatherMeshRef.current) {
+      scene.remove(weatherMeshRef.current);
+      weatherMeshRef.current.geometry.dispose();
+      const oldMaterial = weatherMeshRef.current.material as THREE.Material;
+      oldMaterial.dispose();
+    }
+
+    const geometry = new THREE.SphereGeometry(102.15, 128, 128);
+    const material = new THREE.MeshPhongMaterial({
+      map: weatherFrame.texture,
+      transparent: true,
+      opacity: layers.weather ? 0.44 : 0,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    weatherMeshRef.current = new THREE.Mesh(geometry, material);
+    scene.add(weatherMeshRef.current);
+
+    return () => {
+      if (weatherMeshRef.current) {
+        scene.remove(weatherMeshRef.current);
+      }
+    };
+  }, [weatherFrame.texture]);
+
+  useEffect(() => {
+    if (weatherMeshRef.current) {
+      const material = weatherMeshRef.current.material as THREE.MeshPhongMaterial;
+      material.opacity = layers.weather ? 0.44 : 0;
+      material.needsUpdate = true;
+    }
+  }, [layers.weather]);
+
+  useEffect(() => {
+    if (feed.length === 0) return;
+    const latestNOAA = feed.find((e) => e.source === 'NOAA_SPACE');
+    const newPredictions = [quakeScore(feed), stormForecast(latestNOAA), flightCongestion(flights)];
+    setPredictions(newPredictions);
+  }, [feed, flights]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const handleSwarmEvent = (msg: any) => {
+      if (!msg?.target || !(msg.target.startsWith('L') || msg.target.startsWith('E'))) return;
+      if (!msg?.payload?.pulseId || !Number.isFinite(msg.payload.lat) || !Number.isFinite(msg.payload.lng)) return;
+
+      const swarmEvent: SemanticEvent = {
+        id: msg.payload.pulseId,
+        source: 'HYPER_SWARM_MESH',
+        type: 'Node Detection Anomaly',
+        value: `Conf ${Math.round((msg.confidence || 0) * 100)}%`,
+        location: 'Swarm Vector',
+        timestamp: new Date(),
+        urlRef: `Mesh ID: ${msg.source}->${msg.target}`,
+        lat: msg.payload.lat,
+        lng: msg.payload.lng,
+        size: 2.3,
+        color: SOURCE_VISUALS.HYPER_SWARM_MESH.ring,
+        agentSource: 'Swarm',
+        intent: msg.payload.trigger || 'mesh_vector'
+      };
+
+      addFeedEvent(swarmEvent);
+      setPulses((old) => [
+        ...old,
+        {
+          id: `pulse_swarm_${Date.now()}`,
+          lat: swarmEvent.lat || 0,
+          lng: swarmEvent.lng || 0,
+          maxRadius: 6,
+          propagationSpeed: 2.4,
+          color: 'rgba(139, 92, 246, 0.58)'
+        }
+      ].slice(-MAX_PULSES));
+    };
+
+    const possibleUnsubscribe = globalEventBus.subscribeAll(handleSwarmEvent);
+
+    const fetchEarthIntel = async () => {
+      try {
+        const response = await fetch(USGS_URL, { cache: 'no-store' });
+        if (response.ok && isActive) {
+          const payload = await response.json();
+          const features = Array.isArray(payload?.features) ? payload.features.slice(0, 30) : [];
+          let rawDrift = 0;
+
+          features.forEach((f: any) => {
+            const mag = Number(f?.properties?.mag || 0);
+            const coords = f?.geometry?.coordinates || [];
+            if (!Number.isFinite(coords[0]) || !Number.isFinite(coords[1])) return;
+
+            const quakeEvent: SemanticEvent = {
+              id: f.id,
+              source: 'USGS_EARTHQUAKES',
+              type: 'Live Seismic Event',
+              value: `Mag ${mag.toFixed(1)}`,
+              location: f.properties?.place || 'Unknown fault zone',
+              timestamp: new Date(f.properties?.time || Date.now()),
+              urlRef: 'usgs.gov',
+              lat: coords[1],
+              lng: coords[0],
+              size: clamp(mag * 0.48, 0.7, 5.8),
+              color: mag >= 4 ? '#ef4444' : mag >= 3 ? '#f97316' : '#f59e0b'
+            } as SemanticEvent;
+
+            if (mag > 2.5) rawDrift += (mag ** 2) / 100;
+            const anomaly = detectAnomaly(quakeEvent);
+            if (anomaly) {
+              quakeEvent.agentSource = 'Lucy';
+              quakeEvent.intent = anomaly.flag;
+              speakLucy(`${LucyInterpret(quakeEvent)} This one feels significant.`);
+            } else {
+              quakeEvent.agentSource = 'Emma';
+              quakeEvent.intent = 'tectonic_release';
+            }
+
+            addFeedEvent(quakeEvent);
+            if (mag >= 2.7) {
+              setPulses((old) => [
+                ...old,
+                {
+                  id: `pulse_quake_${f.id}_${Date.now()}`,
+                  lat: quakeEvent.lat || 0,
+                  lng: quakeEvent.lng || 0,
+                  maxRadius: clamp(mag * 1.8, 3, 12),
+                  propagationSpeed: clamp(mag, 1.8, 5.5),
+                  color: mag >= 4 ? 'rgba(239, 68, 68, 0.62)' : 'rgba(249, 115, 22, 0.50)'
+                }
+              ].slice(-MAX_PULSES));
+            }
+          });
+
+          if (rawDrift > 0) {
+            globalEventBus.publish({
+              id: `E-${Date.now()}`,
+              source: 'Earth.USGS',
+              target: 'L_Swarm',
+              type: 'event',
+              payload: { drift: rawDrift, trigger: 'EARTH.SEISMIC' },
+              confidence: 0.95,
+              trace: ['USGS', 'LucyEarthDashboard'],
+              timestamp: Date.now()
+            });
+          }
+        }
+
+        let windSpeed: number | null = null;
+        try {
+          const windRes = await fetch(NOAA_RTSW_WIND_URL, { cache: 'no-store' });
+          if (windRes.ok) windSpeed = normalizeSolarWindSpeed(await windRes.json());
+        } catch {
+          const legacyRes = await fetch(NOAAA_LEGACY_RTSW_URL, { cache: 'no-store' });
+          if (legacyRes.ok) windSpeed = normalizeSolarWindSpeed(await legacyRes.json());
+        }
+
+        if (windSpeed && isActive) {
+          addFeedEvent({
+            id: `noaa_wind_${Math.floor(Date.now() / 60000)}`,
+            source: 'NOAA_SPACE',
+            type: 'Solar Wind RT',
+            value: `${Math.round(windSpeed)} km/s`,
+            location: 'L1 / DSCOVR Solar Wind',
+            timestamp: new Date(),
+            urlRef: 'swpc.noaa.gov',
+            lat: 68,
+            lng: -45,
+            size: clamp(windSpeed / 170, 1.2, 5.2),
+            color: windSpeed > 650 ? '#ef4444' : '#22d3ee',
+            agentSource: 'Lucy',
+            intent: windSpeed > 650 ? 'magnetosphere_pressure_rising' : 'magnetosphere_watch'
+          } as SemanticEvent);
+        }
+      } catch (err) {
+        console.warn('[TwinEarth] Earth intel fetch error', err);
+      }
+    };
+
+    const fetchFlights = async () => {
+      setFlightMode((prev) => (prev === 'live' ? 'live' : 'loading'));
+      try {
+        const headers: HeadersInit = {};
+        // Preferred production path: proxy this through your local Lucy backend so OAuth tokens never ship to the browser.
+        const browserToken = import.meta.env?.VITE_OPENSKY_BEARER_TOKEN;
+        if (browserToken) headers.Authorization = `Bearer ${browserToken}`;
+
+        const res = await fetch(openskyUrl(), { headers, cache: 'no-store' });
+        if (!res.ok) throw new Error(`OpenSky ${res.status}`);
+        const liveFlights = parseOpenSkyFlights(await res.json());
+        if (!isActive) return;
+        if (liveFlights.length > 0) {
+          setFlights(liveFlights);
+          setFlightMode('live');
+          return;
+        }
+        throw new Error('OpenSky returned no visible aircraft');
+      } catch (err) {
+        console.warn('[TwinEarth] Flight data fallback active', err);
+        if (isActive) {
+          setFlights(buildMockFlights());
+          setFlightMode('fallback');
+        }
+      }
+    };
+
+    const fetchWeatherTexture = async () => {
+      setWeatherFrame((prev) => ({ ...prev, status: prev.status === 'live' ? 'live' : 'loading', message: 'Loading RainViewer radar texture...' }));
+      try {
+        const res = await fetch(RAINVIEWER_MAPS_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`RainViewer ${res.status}`);
+        const maps = await res.json();
+        const latest = maps?.radar?.past?.[maps.radar.past.length - 1];
+        if (!latest?.path || !maps?.host) throw new Error('RainViewer frame unavailable');
+        const texture = await buildRainviewerTexture({ host: maps.host, path: latest.path });
+        if (!isActive) return;
+        setWeatherFrame({
+          host: maps.host,
+          path: latest.path,
+          time: latest.time,
+          generated: maps.generated,
+          texture,
+          status: 'live',
+          message: `RainViewer radar frame ${new Date(latest.time * 1000).toLocaleTimeString()}`
+        });
+        addFeedEvent({
+          id: `weather_radar_${latest.time}`,
+          source: 'WEATHER_RADAR',
+          type: 'Global Radar Texture Updated',
+          value: new Date(latest.time * 1000).toLocaleTimeString(),
+          location: 'Global radar composite',
+          timestamp: new Date(latest.time * 1000),
+          urlRef: 'rainviewer.com',
+          lat: 0,
+          lng: 0,
+          size: 1.8,
+          color: SOURCE_VISUALS.WEATHER_RADAR.ring,
+          agentSource: 'EarthFeed',
+          intent: 'precipitation_overlay'
+        } as SemanticEvent);
+      } catch (err) {
+        console.warn('[TwinEarth] Weather texture unavailable', err);
+        if (isActive) {
+          setWeatherFrame((prev) => ({ ...prev, status: 'error', message: 'Radar texture unavailable; cloud shell remains active.' }));
+        }
+      }
+    };
+
+    fetchEarthIntel();
+    fetchFlights();
+    fetchWeatherTexture();
+
+    const intelInterval = window.setInterval(fetchEarthIntel, 60000);
+    const flightInterval = window.setInterval(fetchFlights, 30000);
+    const weatherInterval = window.setInterval(fetchWeatherTexture, 10 * 60 * 1000);
+
+    return () => {
+      isActive = false;
+      window.clearInterval(intelInterval);
+      window.clearInterval(flightInterval);
+      window.clearInterval(weatherInterval);
+      if (typeof possibleUnsubscribe === 'function') possibleUnsubscribe();
+    };
+  }, [addFeedEvent]);
+
+  const runScenario = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scenarioInput.trim() || isSimulating) return;
+
+    setIsSimulating(true);
+    setSimProgress(0);
+    setMergeState((prev) => ({
+      hypothesisA: 54,
+      hypothesisB: 39,
+      noise: 7,
+      convergencePath: [
+        ...prev.convergencePath.slice(-2),
+        `Scenario queued: ${scenarioInput.slice(0, 42)}${scenarioInput.length > 42 ? '...' : ''}`,
+        'Emma gate: sandbox-only simulation path'
+      ]
+    }));
+
+    const simInterval = window.setInterval(() => {
+      setSimProgress((prev) => {
+        if (prev >= 100) {
+          window.clearInterval(simInterval);
+          window.setTimeout(() => setIsSimulating(false), 650);
+          return 100;
+        }
+        return clamp(prev + 5 + Math.random() * 9, 0, 100);
+      });
+    }, 280);
+  };
+
+  const visibleEvents = useMemo(() => {
+    const base = layers.seismic ? feed.filter((e) => e.lat !== undefined && e.lng !== undefined) : [];
+    const predictionsOnly = layers.predictions ? feed.filter((e) => e.source === 'LUCY_PREDICTION' && e.lat !== undefined && e.lng !== undefined) : [];
+    return [...base, ...predictionsOnly];
+  }, [feed, layers.seismic, layers.predictions]);
+
+  const flightStatusText = flightMode === 'live' ? 'OPENSKY LIVE' : flightMode === 'fallback' ? 'MOCK FALLBACK' : 'LOADING ADS-B';
+  const weatherStatusText = weatherFrame.status === 'live' ? 'RADAR LIVE' : weatherFrame.status === 'error' ? 'RADAR ERROR' : 'RADAR LOADING';
+
+  return (
+    <div className={`flex flex-col bg-lucy-dark overflow-hidden p-6 gap-5 relative z-0 transition-all duration-500 ${isExpanded ? 'fixed inset-0 z-50 rounded-none' : 'h-full'}`}>
+      <div className="absolute inset-0 z-[-1] opacity-5 bg-[linear-gradient(#334155_1px,transparent_1px),linear-gradient(90deg,#334155_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+
+      <header className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-3 text-slate-100">
+            <GlobeIcon className="w-7 h-7 text-lucy-primary" />
+            Twin Earth Global Command <span className="font-light text-slate-400">Lucy + Emma</span>
+          </h1>
+          <p className="text-xs font-mono text-slate-500 mt-1 tracking-widest flex gap-4">
+            <span>USGS / NOAA / OpenSky / RainViewer</span>
+            <span>{nowIso()}</span>
+          </p>
+        </div>
+        <div className="flex gap-3 font-mono text-[10px]">
+          <div className={`flex items-center gap-2 bg-slate-900/50 border px-3 py-1.5 rounded-sm ${flightMode === 'live' ? 'border-cyan-500/30 text-cyan-300' : 'border-amber-500/30 text-amber-300'}`}>
+            <Plane className="w-3 h-3" /> {flightStatusText}
+          </div>
+          <div className={`flex items-center gap-2 bg-slate-900/50 border px-3 py-1.5 rounded-sm ${weatherFrame.status === 'live' ? 'border-sky-500/30 text-sky-300' : 'border-slate-700 text-slate-400'}`}>
+            <CloudRain className="w-3 h-3" /> {weatherStatusText}
+          </div>
+          <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-800 px-3 py-1.5 rounded-sm text-slate-300">
+            <Database className="w-3 h-3 text-lucy-success" /> DeltaVault Ready
+          </div>
+        </div>
+      </header>
+
+      <div className="flex items-center gap-4 border border-slate-800 bg-slate-900/50 rounded-md p-2">
+        <div className="flex items-center gap-3 px-2">
+          <Cpu className="w-4 h-4 text-lucy-primary" />
+          <span className="text-xs font-mono text-slate-300">Reasoning Mode</span>
+        </div>
+        <div className="flex flex-1 gap-2 border-l border-slate-800 pl-4">
+          {[
+            { id: 'low_power', label: 'LOW POWER', icon: Zap, desc: 'Fast / Reactive' },
+            { id: 'balanced', label: 'BALANCED', icon: Activity, desc: 'Default' },
+            { id: 'high_compute', label: 'HIGH COMPUTE', icon: Database, desc: 'Deep Sim' },
+            { id: 'arc_pattern', label: 'ARC PATTERN', icon: Layers, desc: 'Experimental' }
+          ].map((mode) => {
+            const Icon = mode.icon;
+            const isSelected = reasoningMode === mode.id;
+            return (
+              <button
+                key={mode.id}
+                onClick={() => {
+                  setReasoningMode(mode.id as ReasoningMode);
+                  setMergeState((prev) => ({
+                    ...prev,
+                    convergencePath: [
+                      ...prev.convergencePath.slice(-2),
+                      `Switched reasoning node to ${mode.label}`,
+                      'Recalculating internal merge parameters...'
+                    ]
+                  }));
+                }}
+                className={`flex-1 flex flex-col items-start px-3 py-2 rounded border gap-1 transition-all ${
+                  isSelected
+                    ? 'bg-lucy-primary/20 border-lucy-primary text-lucy-primary'
+                    : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600 hover:text-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-2 font-bold font-mono text-[10px]">
+                  <Icon className="w-3 h-3" /> {mode.label}
+                </div>
+                <div className="text-[9px] font-mono opacity-60">{mode.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+        <div className="w-44 border-l border-slate-800 pl-4">
+          <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 mb-1">
+            <span>ROTATION</span>
+            <span>{rotationSpeed.toFixed(2)}x</span>
+          </div>
+          <input
+            aria-label="Globe rotation speed"
+            type="range"
+            min="0"
+            max="2.4"
+            step="0.05"
+            value={rotationSpeed}
+            onChange={(e) => setRotationSpeed(Number(e.target.value))}
+            className="w-full accent-cyan-400"
+          />
+        </div>
+      </div>
+
+      <div className={`flex-1 overflow-y-auto custom-scrollbar grid gap-6 transition-all duration-500 ${isExpanded ? 'grid-cols-1' : 'grid-cols-3'}`}>
+        <div className="flex flex-col gap-5 w-full h-full">
+          <div className="flex-1 bg-slate-950 border border-slate-700/50 rounded-md p-4 relative overflow-hidden flex items-center justify-center shadow-lg group">
+            <div className="absolute top-4 left-4 z-10 flex gap-2 items-center">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lucy-danger opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-lucy-danger" />
+              </span>
+              <span className="text-[10px] font-mono text-slate-300 uppercase tracking-widest">Global viewport live</span>
+            </div>
+
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="absolute top-4 right-4 z-20 text-slate-400 hover:text-white bg-slate-900/50 p-1.5 rounded border border-slate-700 hover:border-lucy-primary transition-all"
+              title={isExpanded ? 'Collapse View' : 'Enlarge Global Viewer'}
+            >
+              {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
+
+            <div
+              ref={containerRef}
+              className={`relative overflow-hidden transition-all duration-500 rounded-lg flex items-center justify-center ${isExpanded ? 'w-full h-[680px]' : 'w-full h-[390px] bg-[#020610] border border-slate-800'}`}
+            >
+              {globeSize.width > 0 && (
+                <Globe
+                  rendererConfig={{ precision: 'mediump', antialias: true, alpha: true }}
+                  ref={globeRef}
+                  width={globeSize.width}
+                  height={globeSize.height}
+                  globeImageUrl={EARTH_TEXTURE}
+                  bumpImageUrl={EARTH_BUMP}
+                  backgroundColor="rgba(0,0,0,0)"
+                  showAtmosphere
+                  atmosphereColor="#38bdf8"
+                  atmosphereAltitude={0.18}
+                  ringsData={visibleEvents}
+                  ringLat="lat"
+                  ringLng="lng"
+                  ringAltitude={0.012}
+                  ringColor={(d: any) => d.color || sourceVisual(d.source).ring}
+                  ringMaxRadius={(d: any) => clamp(d.size || 2, 0.8, 9)}
+                  ringPropagationSpeed={(d: any) => (d.source === 'LUCY_PREDICTION' ? 2.3 : 3.4)}
+                  ringRepeatPeriod={(d: any) => (d.source === 'LUCY_PREDICTION' ? 760 : 1150)}
+                  pointsData={layers.predictions ? feed.filter((e) => e.source === 'LUCY_PREDICTION') : []}
+                  pointLat="lat"
+                  pointLng="lng"
+                  pointAltitude={0.025}
+                  pointRadius={(d: any) => clamp((d.size || 1) * 0.18, 0.12, 0.75)}
+                  pointColor={(d: any) => d.color || SOURCE_VISUALS.LUCY_PREDICTION.dot}
+                  pointsMerge={false}
+                  htmlElementsData={pulses}
+                  htmlLat="lat"
+                  htmlLng="lng"
+                  htmlElement={(d: any) => {
+                    const el = document.createElement('div');
+                    el.className = 'w-12 h-12 rounded-full absolute -translate-x-1/2 -translate-y-1/2 pointer-events-none';
+                    el.innerHTML = `<div class="w-full h-full rounded-full animate-ping opacity-60" style="background-color: ${d.color}; animation-duration: ${Math.max(0.8, 4 / d.propagationSpeed)}s"></div>`;
+                    return el;
+                  }}
+                  hexBinPointsData={layers.predictions ? hotspots : []}
+                  hexBinPointLat="lat"
+                  hexBinPointLng="lng"
+                  hexBinPointWeight="weight"
+                  hexBinResolution={3}
+                  hexMargin={0.18}
+                  hexTopColor={() => 'rgba(236, 72, 153, 0.76)'}
+                  hexSideColor={() => 'rgba(56, 189, 248, 0.25)'}
+                  hexAltitude={(d: any) => clamp(d.sumWeight * 0.016, 0.01, 0.22)}
+                  hexBinMerge
+                  hexTransitionDuration={1000}
+                  labelsData={layers.labels ? feed.filter((e) => e.lat !== undefined && e.lng !== undefined) : []}
+                  labelLat="lat"
+                  labelLng="lng"
+                  labelText={(d: any) => sourceVisual(d.source).label || d.value || ''}
+                  labelSize={1.35}
+                  labelDotRadius={0.45}
+                  labelColor={(d: any) => `${sourceVisual(d.source).dot}cc`}
+                  labelResolution={2}
+                  arcsData={layers.flights ? flights : []}
+                  arcStartLat="startLat"
+                  arcStartLng="startLng"
+                  arcEndLat="endLat"
+                  arcEndLng="endLng"
+                  arcColor={(d: any) => (d === hoverArc ? 'rgba(255,255,255,1)' : d.color)}
+                  arcDashLength={(d: any) => (d.source === 'OPENSKY_LIVE' ? 0.42 : 0.25)}
+                  arcDashGap={0.2}
+                  arcDashInitialGap={() => Math.random()}
+                  arcDashAnimateTime={(d: any) => (d.source === 'OPENSKY_LIVE' ? 1450 : 2600)}
+                  arcAltitudeAutoScale={0.12}
+                  arcStroke={(d: any) => d.strokeThickness || 0.35}
+                  arcLabel={(d: FlightArc) => `
+                    <div style="background: rgba(15, 23, 42, 0.93); border: 1px solid rgba(56, 189, 248, 0.35); padding: 8px; border-radius: 6px; font-family: monospace; font-size: 10px; color: white;">
+                      <div style="font-weight: bold; color: ${d.source === 'OPENSKY_LIVE' ? '#38bdf8' : '#fbbf24'}; margin-bottom: 4px;">${d.source === 'OPENSKY_LIVE' ? 'LIVE' : 'MOCK'} Flight: ${d.id}</div>
+                      <div>Country: ${d.country || 'N/A'}</div>
+                      <div>Alt: ${Math.round(d.altitude || 0)}m</div>
+                      <div>Hdg: ${Math.round(d.heading || 0)}°</div>
+                      <div>Spd: ${Math.round((d.velocity || 0) * 3.6)} km/h</div>
+                    </div>
+                  `}
+                  onArcHover={(arc: any) => setHoverArc(arc)}
+                />
+              )}
+            </div>
+
+            <div className="absolute bottom-4 left-4 right-4 flex justify-between gap-2 text-[9px] font-mono z-10 pointer-events-none">
+              <div className="flex gap-2">
+                <div className="bg-slate-900/85 border border-slate-700 px-2 py-1 rounded text-slate-400 flex items-center gap-1">
+                  <Sun className="w-3 h-3 text-amber-300" /> SUN LIGHT <span className="text-lucy-success ml-1">REAL UTC</span>
+                </div>
+                <div className="bg-slate-900/85 border border-slate-700 px-2 py-1 rounded text-slate-400 flex items-center gap-1">
+                  <CloudRain className="w-3 h-3 text-sky-300" /> {weatherFrame.message}
+                </div>
+              </div>
+              <div className="flex gap-2 pointer-events-auto">
+                {[
+                  ['predictions', 'PREDICTIONS'],
+                  ['weather', 'WEATHER'],
+                  ['clouds', 'CLOUDS'],
+                  ['flights', 'FLIGHTS'],
+                  ['seismic', 'SEISMIC'],
+                  ['labels', 'LABELS']
+                ].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setLayers((l) => ({ ...l, [key]: !l[key as keyof LayerState] }))}
+                    className={`px-2 py-1 rounded border ${layers[key as keyof LayerState] ? 'bg-lucy-primary/20 border-lucy-primary text-lucy-primary' : 'bg-slate-900 border-slate-700 text-slate-500'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-md p-4 flex flex-col">
+            <h3 className="text-xs tracking-widest text-slate-300 font-mono flex items-center gap-2 mb-3 border-b border-slate-800 pb-2">
+              <Satellite className="w-3 h-3 text-blue-400" /> Live Source Bridge
+            </h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 font-mono text-[9px] text-slate-400">
+              <div className="flex justify-between items-center bg-slate-950 px-2 py-1.5 rounded"><span>Earthquakes:</span><span className="text-orange-300">USGS</span></div>
+              <div className="flex justify-between items-center bg-slate-950 px-2 py-1.5 rounded"><span>Solar Wind:</span><span className="text-cyan-300">NOAA RTSW</span></div>
+              <div className="flex justify-between items-center bg-slate-950 px-2 py-1.5 rounded"><span>Flights:</span><span className={flightMode === 'live' ? 'text-cyan-300' : 'text-amber-300'}>{flightStatusText}</span></div>
+              <div className="flex justify-between items-center bg-slate-950 px-2 py-1.5 rounded"><span>Weather:</span><span className={weatherFrame.status === 'live' ? 'text-sky-300' : 'text-slate-400'}>{weatherStatusText}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col bg-slate-950 border border-slate-800 rounded-md overflow-hidden shadow-lg h-full">
+          <div className="p-3 border-b border-slate-800 bg-slate-900 flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <h3 className="text-xs uppercase tracking-widest text-slate-300 font-mono flex items-center gap-2">
+                <Brain className="w-4 h-4 text-lucy-primary" /> Planetary Cognition Ingestion
+              </h3>
+              <span className="text-[9px] font-mono text-lucy-success animate-pulse px-2 py-0.5 border border-lucy-success/30 rounded-sm bg-lucy-success/10">THINKING</span>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 p-3 rounded flex flex-col gap-3 font-mono">
+              <div className="text-[10px] text-slate-400 font-bold mb-1 flex items-center gap-2">
+                <Cpu className="w-3 h-3 text-purple-400" /> Lucy Internal Merge State
+              </div>
+              {[
+                ['Hypothesis A', mergeState.hypothesisA, 'bg-purple-500'],
+                ['Hypothesis B', mergeState.hypothesisB, 'bg-blue-500'],
+                ['Noise', mergeState.noise, 'bg-slate-500']
+              ].map(([label, value, color]) => (
+                <div className="flex flex-col gap-1" key={String(label)}>
+                  <div className="flex justify-between text-[9px] text-slate-300"><span>{label}</span><span>{value}%</span></div>
+                  <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden"><div className={`h-full ${color} transition-all duration-500`} style={{ width: `${value}%` }} /></div>
+                </div>
+              ))}
+              <div className="flex flex-col gap-1 mt-2 p-2 bg-slate-900 border border-slate-800 rounded">
+                <span className="text-[9px] text-slate-400 font-bold mb-1">Convergence Path:</span>
+                {mergeState.convergencePath.map((path, idx) => (
+                  <div key={`${path}_${idx}`} className="text-[9px] text-slate-300 flex items-start gap-2"><span className="text-purple-400 opacity-60">→</span><span>{path}</span></div>
+                ))}
+              </div>
+            </div>
+
+            <PredictionStrip predictions={predictions} onPromotePrediction={promotePrediction} />
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1.5">
+            <AnimatePresence>
+              {feed.map((event) => {
+                const visual = sourceVisual(event.source);
+                return (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20, height: 0 }}
+                    animate={{ opacity: 1, x: 0, height: 'auto' }}
+                    key={event.id}
+                    className="bg-slate-900 border border-slate-800/80 p-2.5 rounded-[4px] text-[10px] font-mono flex flex-col gap-1.5 hover:border-lucy-primary/30 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className={`font-bold px-1.5 py-0.5 rounded-[2px] text-[9px] border ${visual.badge}`}>{visual.glyph} {visual.label}</span>
+                      <div className="flex items-center gap-1">
+                        {event.agentSource && <span className="text-[8px] text-lucy-primary border border-lucy-primary/30 px-1 rounded">{event.agentSource}</span>}
+                        <span className="text-slate-500 text-[8px]">{event.urlRef}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-slate-300">{event.type}</span>
+                      {event.intent && <span className="text-[8px] font-bold text-pink-300 opacity-90 uppercase">{event.intent}</span>}
+                    </div>
+                    <div className="flex justify-between text-slate-400 font-sans text-xs mt-0.5">
+                      <span className="font-mono text-[9px] opacity-70 truncate pr-3">{event.location}</span>
+                      <span className="text-white font-bold tracking-tight">{event.value}</span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="flex flex-col bg-slate-900 border border-lucy-primary/20 rounded-md relative overflow-hidden shadow-lg h-full">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-lucy-primary/10 rounded-full blur-[80px] pointer-events-none" />
+          <div className="p-5 border-b border-slate-800 bg-slate-950/50">
+            <h3 className="text-sm font-bold tracking-wide text-white flex items-center gap-2"><Play className="w-4 h-4 text-lucy-primary" /> Predictive Scenario Sandbox</h3>
+            <p className="text-[10px] text-slate-400 mt-1 font-mono">Frontend sandbox progress only until wired to Lucy backend</p>
+          </div>
+
+          <form onSubmit={runScenario} className="p-5 flex-1 flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-slate-400 font-mono">Location Target</label>
+              <input
+                type="text"
+                placeholder="e.g. Gulf Coast, Los Angeles Basin, 34.05,-118.24"
+                className="bg-slate-950 border border-slate-700/80 rounded px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-lucy-primary font-mono transition-colors"
+                disabled={isSimulating}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-xs text-slate-400 font-mono">Physical Modification Prompt</label>
+              <textarea
+                value={scenarioInput}
+                onChange={(e) => setScenarioInput(e.target.value)}
+                className="bg-slate-950 border border-slate-700/80 rounded px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-lucy-primary font-mono min-h-[120px] custom-scrollbar transition-colors leading-relaxed"
+                placeholder="e.g. Inject heavy rainfall over Gulf Coast. Compare live radar, flight congestion, seismic stability, and NOAA solar-wind interference."
+                disabled={isSimulating}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSimulating || !scenarioInput.trim()}
+              className="mt-2 bg-lucy-primary/10 border border-lucy-primary/30 text-lucy-primary hover:bg-lucy-primary/20 hover:border-lucy-primary/60 px-4 py-3 flex items-center justify-center gap-3 rounded text-xs tracking-widest uppercase font-bold font-mono transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(6,182,212,0.1)]"
+            >
+              {isSimulating ? <><span className="animate-spin w-4 h-4 border-2 border-lucy-primary border-t-transparent rounded-full" /> COMPUTING SANDBOX...</> : <><Play className="w-4 h-4" /> INJECT INTO TWIN EARTH</>}
+            </button>
+
+            {isSimulating && (
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="flex justify-between text-[10px] font-mono text-slate-400"><span>Sandbox Render Stream</span><span>{Math.floor(simProgress)}%</span></div>
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-lucy-primary shadow-[0_0_10px_#06b6d4] transition-all duration-300 ease-out" style={{ width: `${Math.min(simProgress, 100)}%` }} /></div>
+              </div>
+            )}
+
+            {simProgress >= 100 && !isSimulating && (
+              <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="bg-slate-900 border border-lucy-success/30 p-4 rounded mt-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-lucy-success shadow-[0_0_10px_#10b981]" />
+                <div className="flex gap-2 items-center text-lucy-success text-xs font-mono mb-2 font-bold px-2"><Activity className="w-4 h-4" /> Sandbox Candidate Ready</div>
+                <p className="text-[10px] text-slate-300 font-mono leading-relaxed px-2">
+                  Scenario path completed in UI sandbox. Next upgrade should send this request to Lucy backend, write the proposal to DeltaVault, then let Emma approve or reject execution.
+                </p>
+              </motion.div>
+            )}
+
+            <div className="mt-auto grid grid-cols-2 gap-2 text-[9px] font-mono text-slate-400">
+              <div className="bg-slate-950 border border-slate-800 rounded p-2 flex items-center gap-2"><RadioTower className="w-3 h-3 text-cyan-300" /> Feed: {feed.length}</div>
+              <div className="bg-slate-950 border border-slate-800 rounded p-2 flex items-center gap-2"><Plane className="w-3 h-3 text-sky-300" /> Flights: {flights.length}</div>
+              <div className="bg-slate-950 border border-slate-800 rounded p-2 flex items-center gap-2"><CloudRain className="w-3 h-3 text-blue-300" /> Radar: {weatherFrame.status}</div>
+              <div className="bg-slate-950 border border-slate-800 rounded p-2 flex items-center gap-2"><Layers className="w-3 h-3 text-pink-300" /> Hotspots: {hotspots.length}</div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TwinEarthDashboard;
