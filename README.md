@@ -1,3 +1,6 @@
+> 🌐 **Fenton Lab official website:** [fentonlabai.pages.dev](https://fentonlabai.pages.dev/)  
+> Planned primary domain: `fentonlabai.com` (custom-domain connection pending).
+
 Lucy Platform
 Research-Ready AIOS Framework Powered by E.M.M.A.
 Overview
